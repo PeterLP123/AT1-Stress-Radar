@@ -1,0 +1,23 @@
+# Valid synthetic fixture used by loader tests.
+instrument_id: fixture-valid
+isin: null
+issuer_id: FIXTURE-BANK
+issuer_name: Fixture Bank
+instrument_name: Fixture Bank 5.000% Perpetual AT1
+currency: EUR
+issue_date: 2023-01-15
+notional: 100000.0
+current_coupon_rate: 0.05
+coupon_frequency: annual
+day_count: THIRTY_360
+first_call_date: 2028-01-15
+subsequent_call_frequency_months: 12
+reset_benchmark: EUR_MID_SWAP_1Y
+reset_margin_bps: 300.0
+contractual_cet1_trigger: 0.05125
+loss_absorption_type: permanent_write_down
+coupon_discretion: true
+governing_law: Synthetic
+terms_source: test fixture
+terms_verified_date: 2026-06-30
+is_synthetic: true

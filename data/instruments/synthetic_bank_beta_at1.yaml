@@ -1,0 +1,24 @@
+# Fully synthetic AT1 instrument for research and testing. Not a real security.
+# Rates are decimals (0.0725 = 7.25%); reset_margin_bps is basis points (bps / 10_000).
+instrument_id: synthetic-beta
+isin: null
+issuer_id: SYNBANK-BETA
+issuer_name: Synthetic Bank Beta
+instrument_name: Synthetic Bank Beta 7.250% Perpetual AT1 (first call 2028)
+currency: EUR
+issue_date: 2021-06-30
+notional: 200000.0
+current_coupon_rate: 0.0725
+coupon_frequency: quarterly
+day_count: ACT_365
+first_call_date: 2028-06-30
+subsequent_call_frequency_months: 12
+reset_benchmark: EURIBOR_3M
+reset_margin_bps: 512.5
+contractual_cet1_trigger: 0.07
+loss_absorption_type: equity_conversion
+coupon_discretion: true
+governing_law: Synthetic (modelled on German law)
+terms_source: synthetic fixture, hand-written
+terms_verified_date: 2026-06-30
+is_synthetic: true

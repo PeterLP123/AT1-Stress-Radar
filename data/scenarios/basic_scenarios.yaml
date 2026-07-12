@@ -1,0 +1,38 @@
+# Placeholder scenario definitions for a future decomposition engine.
+# The current application validates this schema but does not yet apply the shocks.
+# Shock conventions:
+#   *_shock_bps        basis points, converted downstream with bps / 10_000
+#   issuer_equity_shock decimal return shock (-0.30 = equity down 30%)
+#   cet1_ratio_shock    decimal additive shock to the CET1 ratio (-0.02 = -2 pts)
+scenarios:
+  - name: base_case
+    description: No shocks; instrument assumed called at first call date.
+    risk_free_rate_shock_bps: 0
+    credit_spread_shock_bps: 0
+    reset_rate_shock_bps: 0
+    call_assumption: called_at_first_call
+
+  - name: rates_up_100
+    description: Parallel risk-free rate rise of 100 bps, passed through to reset rates.
+    risk_free_rate_shock_bps: 100
+    credit_spread_shock_bps: 0
+    reset_rate_shock_bps: 100
+    call_assumption: called_at_first_call
+
+  - name: credit_repricing_150
+    description: AT1 credit-spread widening of 150 bps with unchanged risk-free rates.
+    risk_free_rate_shock_bps: 0
+    credit_spread_shock_bps: 150
+    reset_rate_shock_bps: 0
+    call_assumption: called_at_first_call
+
+  - name: forced_extension
+    description: >
+      Issuer skips the first call under funding stress: spreads widen sharply,
+      equity sells off and the CET1 ratio deteriorates.
+    risk_free_rate_shock_bps: 0
+    credit_spread_shock_bps: 300
+    reset_rate_shock_bps: 0
+    call_assumption: extended_to_next_call
+    issuer_equity_shock: -0.30
+    cet1_ratio_shock: -0.02

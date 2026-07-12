@@ -1,0 +1,24 @@
+# Fully synthetic AT1 instrument for research and testing. Not a real security.
+# Rates are decimals (0.065 = 6.5%); reset_margin_bps is basis points (bps / 10_000).
+instrument_id: synthetic-alpha
+isin: null
+issuer_id: SYNBANK-ALPHA
+issuer_name: Synthetic Bank Alpha
+instrument_name: Synthetic Bank Alpha 6.500% Perpetual AT1 (first call 2027)
+currency: EUR
+issue_date: 2022-03-15
+notional: 200000.0
+current_coupon_rate: 0.065
+coupon_frequency: semiannual
+day_count: ACT_ACT
+first_call_date: 2027-03-15
+subsequent_call_frequency_months: 60
+reset_benchmark: EUR_MID_SWAP_5Y
+reset_margin_bps: 450.0
+contractual_cet1_trigger: 0.05125
+loss_absorption_type: temporary_write_down
+coupon_discretion: true
+governing_law: Synthetic (modelled on Irish law)
+terms_source: synthetic fixture, hand-written
+terms_verified_date: 2026-06-30
+is_synthetic: true
