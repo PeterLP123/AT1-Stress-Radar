@@ -3,6 +3,33 @@
 This roadmap is ordered by dependency and evidence, not by promised dates. It
 describes the intended product direction as of 15 July 2026.
 
+## Roadmap at a glance
+
+```mermaid
+flowchart LR
+    M0(["v0.1<br/>Transparent state pricer<br/>COMPLETE"])
+    M1["v0.2<br/>Stress engine<br/>NEXT"]
+    M2["v0.3<br/>Extension-cliff workbench"]
+    M3["v0.4<br/>Contract-to-capital radar"]
+    M4["v0.5<br/>Portfolio and lifecycle radar"]
+    M5(["v1.0<br/>Validated research release"])
+    H["Continuous hardening<br/>tests · CI · provenance · revisions"]
+
+    M0 --> M1 --> M2 --> M3 --> M4 --> M5
+    H -. supports .-> M1
+    H -. supports .-> M3
+    H -. supports .-> M5
+```
+
+| Release | Product focus | What the user gains | Completion signal |
+|---|---|---|---|
+| ✅ `v0.1` | Transparent state pricer | Compare first-call and one-extension values | Delivered and regression-tested |
+| → `v0.2` | Scenario engine | Explain the value change from each shock | Repricing and attribution reconcile |
+| ○ `v0.3` | Extension-cliff workbench | See value and call economics across future call dates | Call ladder reconciles to cash flows |
+| ○ `v0.4` | Contract-to-capital radar | Link verified terms to official issuer capital data | Every threshold has a reconciled entity basis |
+| ○ `v0.5` | Portfolio and lifecycle radar | Rank exposures and see what changed | Portfolio and source-diff evidence packs reconcile |
+| ○ `v1.0` | Validated research release | Use an independently checked research tool | Golden references, historical evaluation, and data rights pass |
+
 ## Product thesis
 
 AT1 Stress Radar should become an open, provenance-first **contract-to-capital
@@ -20,13 +47,34 @@ price. Public bank data usually stops at prudential ratios. Bond models usually
 stop at cash flows. This project should connect them while exposing every
 source, transformation, entity basis, and missing input.
 
-```text
-verified AT1 terms ----------\
-market assumptions -----------\
-issuer and entity mapping ------> scenario compiler --> state cash flows
-official capital disclosures --/                          + value changes
-official stress paths --------/                           + threshold distances
-                                                           + evidence record
+```mermaid
+flowchart LR
+    subgraph Inputs["Evidence inputs"]
+        T["Verified AT1 terms"]
+        M["Market assumptions"]
+        I["Issuer and entity mapping"]
+        C["Official capital disclosures"]
+        S["Official stress paths"]
+    end
+
+    E["Contract-to-capital<br/>scenario compiler"]
+
+    subgraph Outputs["Auditable outputs"]
+        O1["State cash flows"]
+        O2["Value-change attribution"]
+        O3["Threshold distances"]
+        O4["Evidence record"]
+    end
+
+    T --> E
+    M --> E
+    I --> E
+    C --> E
+    S --> E
+    E --> O1
+    E --> O2
+    E --> O3
+    E --> O4
 ```
 
 This is an inference about a useful open-source gap, not a claim that no
