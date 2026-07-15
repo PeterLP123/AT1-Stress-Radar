@@ -1,8 +1,10 @@
 # Data dictionary
 
 Conventions used throughout: **rates are decimals** (`0.065` = 6.5%);
-**basis-point fields** are converted downstream with `bps / 10_000`;
-**dates** are ISO `YYYY-MM-DD` (PyYAML parses them to `datetime.date`).
+**dates** are ISO `YYYY-MM-DD` (PyYAML parses them to `datetime.date`). The
+implemented cash-flow engine converts `reset_margin_bps` with `bps / 10_000`.
+Scenario `*_shock_bps` fields are expressed in basis points but are only
+validated in version `0.1.0`; no scenario shock is converted or applied yet.
 
 ## Instrument fields (`data/instruments/*.yaml`)
 
@@ -53,6 +55,21 @@ does not apply the shocks.
 | `issuer_equity_shock` | float or null | optional; −1 to 1 | Issuer equity return shock as a decimal (`-0.30` = −30%). |
 | `cet1_ratio_shock` | float or null | optional; −0.2 to 0.2 | Additive shock to the CET1 ratio as a decimal (`-0.02` = −2 percentage points). |
 
+## State valuation result
+
+`at1radar.pricing.state_pricing.value_state` returns a frozen
+`StateValuationResult`. `value_both_states` returns one result per `CallState`.
+
+| Field | Type | Description |
+|---|---|---|
+| `state` | `CallState` | Deterministic call assumption used for the valuation. |
+| `terminal_date` | date | Assumed par-redemption date for the state. |
+| `present_value` | float | Sum of discounted cash flows in instrument currency. |
+| `model_price_pct_of_notional` | float | `100 * present_value / notional`; `100.0` means par. |
+| `num_cashflows` | int | Number of future payment rows included. |
+| `assumptions` | dict | Valuation date, flat discount rate, assumed reset benchmark, reset margin, and discounting convention used. |
+| `cashflows` | pandas DataFrame | Contractual schedule plus discounting columns described below. |
+
 ## Cash-flow schedule columns
 
 Output of `at1radar.cashflows.schedule.generate_coupon_schedule` (one row per
@@ -73,3 +90,10 @@ remaining payment):
 `at1radar.pricing.state_pricing.value_state` appends `years_to_payment`
 (actual days / 365.25), `discount_factor`, and `present_value` columns to the
 schedule it returns in `StateValuationResult.cashflows`.
+
+## Related documentation
+
+- [README](../README.md)
+- [Architecture](architecture.md)
+- [Methodology](methodology.md)
+- [Roadmap](roadmap.md)

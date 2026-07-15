@@ -1,5 +1,17 @@
 # Methodology
 
+This document describes the model implemented in version `0.1.0`. Scenario
+YAML is validated but does not affect pricing yet. The
+[roadmap](roadmap.md) separates planned methods from the calculations that
+exist today.
+
+## Implemented scope
+
+The model accepts a valuation date on or after issue and strictly before the
+first call date. It generates the remaining contractual coupons to an assumed
+terminal call date, repays notional at that date, and discounts every payment.
+The two supported terminal states are defined below.
+
 ## Called versus extended states
 
 AT1 instruments are perpetual but callable by the issuer, typically first at
@@ -74,7 +86,8 @@ omits, at minimum:
 
 1. Call-probability weighting across many possible extension horizons.
 2. Coupon cancellation risk — AT1 coupons are fully discretionary and can be
-   switched off (e.g. under MDA restrictions) without default.
+   switched off (e.g. under maximum distributable amount (MDA) restrictions)
+   without default.
 3. Trigger and loss-absorption risk — write-down or conversion at the CET1
    trigger is recorded as a term but never enters the cash flows.
 4. A term structure of rates and a market-implied credit spread.
@@ -83,3 +96,10 @@ omits, at minimum:
 Each omission can move the number materially. The outputs are research
 illustrations of *relative* sensitivity (e.g. called versus extended, low
 versus high discount rate), not statements of worth.
+
+## Related documentation
+
+- [README](../README.md)
+- [Architecture](architecture.md)
+- [Data dictionary](data_dictionary.md)
+- [Roadmap](roadmap.md)

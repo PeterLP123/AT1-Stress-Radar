@@ -1,70 +1,120 @@
 # Architecture
 
-## Package boundaries
+AT1 Stress Radar is a small `src`-layout Python package with thin CLI and
+Streamlit entry points. Domain rules and calculations stay independent of the
+presentation layer so the same result can be reproduced in tests, scripts, or
+the app.
 
-The project uses a `src` layout with one package, `at1radar`, split into
-modules with strict one-way dependencies:
+## Current data flow
 
+```text
+instrument YAML --> defensive loader --> AT1Instrument
+                                             |
+call state + valuation assumptions ---------+
+                                             v
+                                      state pricing
+                                             |
+                                             v
+                                      coupon schedule
+                                             |
+                                             v
+                                  StateValuationResult --> CLI / Streamlit
+
+scenario YAML --> defensive loader --> Scenario --> validation output
+                                               (no pricing edge today)
 ```
-domain  <--  data (loaders)
-domain  <--  cashflows
-domain, cashflows  <--  pricing
-domain, data, pricing  <--  cli
-domain, data, pricing  <--  app/streamlit_app.py (outside the package)
+
+The scenario branch stops after validation in version `0.1.0`. No scenario
+shock reaches pricing yet.
+
+## Package dependencies
+
+Arrows point from a consumer to the package it depends on:
+
+```text
+data ------------------------> domain
+cashflows -------------------> domain
+pricing ---------------------> domain, cashflows
+cli -------------------------> domain, data, pricing
+app/streamlit_app.py --------> domain, data, pricing
 ```
+
+Dependencies remain one-way. In particular, domain models never import file
+loaders, pricing code, or the user interfaces.
 
 ### `at1radar.domain`
 
-Pydantic models and enums only. No I/O, no pandas, no pricing logic.
+Frozen Pydantic models and controlled vocabularies only.
 
-- `instruments.py`: `AT1Instrument` and its controlled vocabularies
-  (`Currency`, `CouponFrequency`, `DayCount`, `LossAbsorptionType`).
-- `scenarios.py`: `Scenario` (a placeholder schema for the future
-  decomposition engine) and `CallState`, the deterministic call states shared
-  by scenarios and pricing. `CallState` lives in the domain layer so that
-  pricing and scenarios can both reference it without a circular import.
+- `instruments.py` defines `AT1Instrument`, currency, coupon frequency,
+  day-count, and loss-absorption types.
+- `scenarios.py` defines the starting `Scenario` input contract and
+  `CallState`. `CallState` lives here because cash-flow valuation and future
+  scenario logic both need it.
+
+This layer validates structural and contractual invariants, including finite
+numbers, call dates aligned to the issue-anchored coupon schedule, and
+subsequent call frequencies compatible with coupon periods.
 
 ### `at1radar.data`
 
-YAML loading and validation. Translates file-level problems (missing files,
-malformed YAML, schema violations) into `InstrumentLoadError` /
-`ScenarioLoadError` with the offending path in the message. Never fills in
-missing required fields with defaults.
+YAML ingestion and validation. The loaders turn missing files, unreadable
+content, malformed YAML, duplicate identifiers, and schema failures into
+path-aware `InstrumentLoadError` or `ScenarioLoadError` messages. They never
+silently fill missing required fields.
 
 ### `at1radar.cashflows`
 
-Pure schedule generation: instrument + valuation date + terminal call date +
-assumed reset benchmark rate -> pandas DataFrame of contractual cash flows.
-Contains the date arithmetic (`add_months`) and simplified day-count logic.
+Pure schedule generation. An instrument, valuation date, terminal call date,
+and assumed reset benchmark produce a pandas DataFrame of contractual cash
+flows. The module owns calendar-month stepping and the simplified accrual
+conventions.
 
 ### `at1radar.pricing`
 
-State-contingent valuation. Maps a `CallState` to a terminal date, asks
-`cashflows` for the schedule, discounts at a flat rate, and returns a
-`StateValuationResult`. No UI concerns, no file I/O.
+Deterministic state valuation. It maps a `CallState` to a terminal date, asks
+`cashflows` for the schedule, discounts each payment with one flat annual
+rate, and returns a `StateValuationResult`. It has no file or UI concerns.
 
-### `at1radar.cli` and `app/streamlit_app.py`
+### CLI and Streamlit
 
-Thin presentation layers. Both only wire user inputs to loaders and pricing
-functions and format the results. The Streamlit app lives outside the
-installable package because it is an entry point, not a library.
+`at1radar.cli` and `app/streamlit_app.py` are presentation adapters. They load
+inputs, call package functions, handle domain-friendly errors, and format the
+same underlying results. The Streamlit entry point remains outside the
+installable package.
 
-## Intended future modules
+## Evolution rules
 
-These are planned, not scaffolded (no empty abstractions yet):
+New roadmap work should preserve these boundaries:
 
-- `at1radar.scenarios` (engine): apply `Scenario` shocks to valuation inputs
-  and produce a value-change decomposition. The `Scenario` schema in
-  `domain/scenarios.py` is the stable contract for this work.
-- `at1radar.curves`: replace the flat discount rate with a simple curve /
-  spread split (risk-free + credit spread), which the scenario shocks
-  (`risk_free_rate_shock_bps`, `credit_spread_shock_bps`) are designed for.
-- `at1radar.portfolio`: aggregate several instruments.
+1. Scenario application belongs in an engine above the domain models, not in
+   `domain/scenarios.py`.
+2. Market and regulatory data arrive through adapters that retain source,
+   as-of date, retrieval time, units, and entity basis.
+3. Cash-flow and loss-absorption mechanics remain deterministic before any
+   probability or machine-learning layer is added.
+4. CLI, UI, and future export/API surfaces consume shared result records rather
+   than reimplementing calculations.
+5. Licensed or user-supplied market observations stay separate from the
+   synthetic, redistributable fixtures in this repository.
+
+The [roadmap](roadmap.md) is the single source of truth for planned modules and
+delivery order.
 
 ## Testing strategy
 
-Unit tests live in `tests/unit` and use fixed deterministic dates
-(`tests/conftest.py`). YAML fixtures for loader error paths live in
-`tests/fixtures`. The CLI is tested end-to-end against the repository's
-sample data; the Streamlit app is intentionally thin enough not to need
-tests yet.
+Unit tests in `tests/unit` use fixed dates and deterministic fixtures. They
+cover domain validation, schedule boundary cases, day-count rules, pricing
+reconciliation, loader failures, and CLI behavior. Repository YAML is used by
+end-to-end CLI tests.
+
+CI currently runs formatting, linting, mypy, and pytest with an 80% package
+coverage floor. Two gaps remain explicit: the Streamlit `AppTest` smoke is not
+yet committed to the suite, and the model has no independent external
+valuation oracle. Both are hardening work in the roadmap.
+
+## Related documentation
+
+- [Methodology](methodology.md)
+- [Data dictionary](data_dictionary.md)
+- [Roadmap](roadmap.md)
