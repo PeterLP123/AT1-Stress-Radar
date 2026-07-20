@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
 from pydantic import ValidationError
 
+from at1radar.data.yaml_io import read_yaml
 from at1radar.domain.instruments import AT1Instrument
 
 DEFAULT_INSTRUMENTS_DIR = Path("data") / "instruments"
@@ -24,14 +24,7 @@ def load_instrument(path: Path) -> AT1Instrument:
     message if the file is missing, is not valid YAML, is not a mapping, or
     fails domain validation.
     """
-    try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise InstrumentLoadError(f"instrument file not found: {path}") from exc
-    except (OSError, UnicodeError) as exc:
-        raise InstrumentLoadError(f"cannot read instrument file {path}: {exc}") from exc
-    except yaml.YAMLError as exc:
-        raise InstrumentLoadError(f"malformed YAML in {path}: {exc}") from exc
+    raw = read_yaml(path, error_cls=InstrumentLoadError, kind="instrument")
     if not isinstance(raw, dict):
         raise InstrumentLoadError(
             f"{path}: expected a mapping of instrument fields, got {type(raw).__name__}"

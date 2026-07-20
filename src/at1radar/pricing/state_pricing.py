@@ -26,7 +26,8 @@ from math import isfinite
 
 import pandas as pd
 
-from at1radar.cashflows.schedule import add_months, generate_coupon_schedule
+from at1radar.cashflows.schedule import generate_coupon_schedule
+from at1radar.dates import add_months, months_between
 from at1radar.domain.instruments import AT1Instrument
 from at1radar.domain.scenarios import CallState
 
@@ -53,15 +54,17 @@ class StateValuationResult:
 
 
 def terminal_date_for_state(instrument: AT1Instrument, state: CallState) -> date:
-    """Redemption date implied by a deterministic call state."""
+    """Redemption date implied by a deterministic call state.
+
+    Extension is anchored at the issue date (not the first call date) so that
+    month-end instruments stay on the coupon schedule after a skipped call.
+    """
     if state is CallState.CALLED_AT_FIRST_CALL:
         return instrument.first_call_date
-    months_to_first_call = (instrument.first_call_date.year - instrument.issue_date.year) * 12 + (
-        instrument.first_call_date.month - instrument.issue_date.month
-    )
     return add_months(
         instrument.issue_date,
-        months_to_first_call + instrument.subsequent_call_frequency_months,
+        months_between(instrument.issue_date, instrument.first_call_date)
+        + instrument.subsequent_call_frequency_months,
     )
 
 

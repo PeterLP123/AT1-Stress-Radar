@@ -15,11 +15,12 @@ full legal complexity of an AT1 prospectus.
 
 from __future__ import annotations
 
-import calendar
 from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from at1radar.dates import add_months, months_between
 
 
 class Currency(StrEnum):
@@ -126,17 +127,11 @@ class AT1Instrument(BaseModel):
                 f"first_call_date ({self.first_call_date}) must be after "
                 f"issue_date ({self.issue_date})"
             )
-        months_to_first_call = (self.first_call_date.year - self.issue_date.year) * 12 + (
-            self.first_call_date.month - self.issue_date.month
-        )
+        months_to_first_call = months_between(self.issue_date, self.first_call_date)
         coupon_months = self.coupon_frequency.months_per_period
-        expected_call_day = min(
-            self.issue_date.day,
-            calendar.monthrange(self.first_call_date.year, self.first_call_date.month)[1],
-        )
         if (
             months_to_first_call % coupon_months != 0
-            or self.first_call_date.day != expected_call_day
+            or add_months(self.issue_date, months_to_first_call) != self.first_call_date
         ):
             raise ValueError(
                 f"first_call_date ({self.first_call_date}) must fall on the "

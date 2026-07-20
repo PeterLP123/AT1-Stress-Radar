@@ -19,7 +19,17 @@ from math import isfinite
 
 import pandas as pd
 
+from at1radar.dates import add_months
 from at1radar.domain.instruments import AT1Instrument, DayCount
+
+# Re-export for callers that historically imported from this module.
+__all__ = [
+    "SCHEDULE_COLUMNS",
+    "ScheduleError",
+    "add_months",
+    "generate_coupon_schedule",
+    "year_fraction",
+]
 
 SCHEDULE_COLUMNS = [
     "payment_date",
@@ -36,19 +46,6 @@ SCHEDULE_COLUMNS = [
 
 class ScheduleError(ValueError):
     """Raised when a coupon schedule cannot be generated."""
-
-
-def add_months(anchor: date, months: int) -> date:
-    """Return ``anchor`` shifted by ``months`` calendar months.
-
-    The day of month is clamped to the last valid day of the target month
-    (e.g. 31 Jan + 1 month -> 28/29 Feb).
-    """
-    total = anchor.year * 12 + (anchor.month - 1) + months
-    year, month_index = divmod(total, 12)
-    month = month_index + 1
-    day = min(anchor.day, calendar.monthrange(year, month)[1])
-    return date(year, month, day)
 
 
 def year_fraction(start: date, end: date, day_count: DayCount) -> float:
